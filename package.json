@@ -1,0 +1,28 @@
+{
+  "name": "highlightjs-move",
+  "version": "1.0.0",
+  "description": "Highlight.js support for Move",
+  "homepage": "https://github.com/gregnazario/highlightjs-move#readme",
+  "bugs": {
+    "url": "https://github.com/gregnazario/highlightjs-move/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gregnazario/highlightjs-move.git"
+  },
+  "keywords": [
+    "highlightjs",
+    "highlight.js",
+    "aptos",
+    "move",
+    "syntax",
+    "highlighting"
+  ],
+  "license": "MIT",
+  "author": "Greg Nazario <greg@gnazar.io>",
+  "type": "commonjs",
+  "main": "src/languages/move.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
