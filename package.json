@@ -1,6 +1,6 @@
 {
   "name": "highlightjs-move",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Highlight.js grammar for the Move programming language (Aptos blockchain)",
   "homepage": "https://github.com/gregnazario/highlightjs-move#readme",
   "bugs": {
