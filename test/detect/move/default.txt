@@ -1,0 +1,375 @@
+/// Module-level documentation comment.
+/// This module demonstrates all major Move syntax features for highlight.js testing.
+module 0x42::highlight_test {
+    use std::vector;
+    use std::string::String;
+    use std::option::{Self, Option};
+
+    // -------------------------------------------------------------------------
+    // Constants
+    // -------------------------------------------------------------------------
+
+    /// Error code for unauthorized access.
+    const E_NOT_AUTHORIZED: u64 = 1;
+    const MAX_SUPPLY: u128 = 1_000_000u128;
+    const HEX_CONST: u64 = 0xDEAD_BEEF;
+    const SIGNED_CONST: i64 = -42i64;
+
+    // -------------------------------------------------------------------------
+    // Struct with abilities
+    // -------------------------------------------------------------------------
+
+    /// A coin resource stored in global storage.
+    struct Coin<phantom CoinType> has key, store {
+        value: u64,
+    }
+
+    /// A simple pair with positional fields (Move 2.0+).
+    struct Pair(u64, u8) has copy, drop;
+
+    /// A public struct example.
+    public struct Config has key {
+        admin: address,
+        enabled: bool,
+    }
+
+    // -------------------------------------------------------------------------
+    // Enum with abilities (Move 2.0+)
+    // -------------------------------------------------------------------------
+
+    /// Versioned data for upgrade compatibility.
+    enum VersionedData has key {
+        V1 { name: String }
+        V2 { name: String, age: u64 }
+    }
+
+    /// Simple value enum.
+    enum Color has copy, drop, store {
+        Red,
+        Green,
+        Blue,
+    }
+
+    /// Generic result type with positional variants.
+    enum Result<T> has copy, drop {
+        Ok(T),
+        Err(u64),
+    }
+
+    // -------------------------------------------------------------------------
+    // Friend declaration
+    // -------------------------------------------------------------------------
+
+    friend 0x42::other_module;
+
+    // -------------------------------------------------------------------------
+    // Functions: visibility, entry, native, inline
+    // -------------------------------------------------------------------------
+
+    /// A public entry function (transaction entry point).
+    public entry fun initialize(account: &signer) {
+        let addr = @0x42;
+        let config = Config {
+            admin: addr,
+            enabled: true,
+        };
+        move_to(account, config);
+    }
+
+    /// Function using acquires annotation.
+    public fun get_admin(addr: address): address acquires Config {
+        let config = borrow_global<Config>(addr);
+        config.admin
+    }
+
+    /// Native function declaration.
+    native public fun compare<T>(first: &T, second: &T): bool;
+
+    /// Package-visible function (Move 2.0+).
+    package fun internal_helper(): u64 {
+        42u64
+    }
+
+    /// Inline function for performance.
+    inline fun percent(x: u64, y: u64): u64 {
+        x * 100 / y
+    }
+
+    /// Friend-visible function.
+    friend fun restricted_operation() {
+        abort E_NOT_AUTHORIZED
+    }
+
+    // -------------------------------------------------------------------------
+    // Control flow: if/else, while, loop, for, match, break, continue, return
+    // -------------------------------------------------------------------------
+
+    fun control_flow_examples(n: u64): u64 {
+        // if/else
+        let result = if (n == 0) {
+            0u64
+        } else {
+            n - 1
+        };
+
+        // while loop
+        let i = 0u64;
+        while (i < n) {
+            i = i + 1;
+            if (i == 5) continue;
+            if (i > 10) break;
+        };
+
+        // for loop (Move 2.0+)
+        let sum = 0u64;
+        for (j in 0..n) {
+            sum = sum + j;
+        };
+
+        // loop with break
+        let counter = 0u64;
+        loop {
+            counter = counter + 1;
+            if (counter >= n) break;
+        };
+
+        // match expression (Move 2.0+)
+        let color = Color::Blue;
+        let val = match (color) {
+            Color::Red => 1,
+            Color::Green => 2,
+            Color::Blue => 3,
+        };
+
+        // abort and assert
+        assert!(n > 0, E_NOT_AUTHORIZED);
+        if (n == 0) abort 0;
+
+        // return
+        return result + sum + counter + val
+    }
+
+    // -------------------------------------------------------------------------
+    // Pattern matching, destructuring, enum variant testing
+    // -------------------------------------------------------------------------
+
+    fun pattern_matching(data: VersionedData): String {
+        match (data) {
+            VersionedData::V1 { name } => name,
+            VersionedData::V2 { name, age: _ } => name,
+        }
+    }
+
+    fun variant_testing(data: &VersionedData): bool {
+        // `is` operator for enum variant testing (Move 2.0+)
+        data is VersionedData::V1
+    }
+
+    fun destructuring_example() {
+        let pair = Pair(10, 20u8);
+        let Pair(a, b) = pair;
+
+        let coin = Coin<u64> { value: 100 };
+        let Coin { value: v } = coin;
+
+        // Partial patterns with ..
+        let data = VersionedData::V2 { name: b"test", age: 25 };
+        let VersionedData::V2 { name, .. } = data;
+    }
+
+    // -------------------------------------------------------------------------
+    // Ownership: move, copy
+    // -------------------------------------------------------------------------
+
+    fun ownership_examples() {
+        let x = Coin<u64> { value: 100 };
+        let y = move x;     // explicit move
+        let Coin { value: _ } = y;
+
+        let a: u64 = 42;
+        let b = copy a;     // explicit copy
+        let _ = a + b;
+    }
+
+    // -------------------------------------------------------------------------
+    // Receiver-style function calls (self parameter)
+    // -------------------------------------------------------------------------
+
+    fun area(self: &VersionedData): u64 {
+        match (self) {
+            VersionedData::V1 { .. } => 0,
+            VersionedData::V2 { age, .. } => *age,
+        }
+    }
+
+    fun call_receiver_style() {
+        let data = VersionedData::V2 { name: b"alice", age: 30 };
+        let a = data.area();
+        let _ = a;
+    }
+
+    // -------------------------------------------------------------------------
+    // Generics, phantom types, type constraints
+    // -------------------------------------------------------------------------
+
+    fun identity<T: copy + drop>(x: T): T { copy x }
+
+    struct Wrapper<phantom T> has key {
+        inner: u64,
+    }
+
+    fun generic_with_constraints<T: store + key>(item: T): T {
+        item
+    }
+
+    // -------------------------------------------------------------------------
+    // Global storage operators
+    // -------------------------------------------------------------------------
+
+    fun storage_ops(account: &signer, addr: address) acquires Config {
+        // exists
+        let has_config = exists<Config>(addr);
+
+        if (!has_config) {
+            // move_to
+            move_to(account, Config { admin: addr, enabled: true });
+        };
+
+        // borrow_global, borrow_global_mut
+        let config_ref = borrow_global<Config>(addr);
+        let _ = config_ref.admin;
+
+        let config_mut = borrow_global_mut<Config>(addr);
+        config_mut.enabled = false;
+
+        // move_from
+        let Config { admin: _, enabled: _ } = move_from<Config>(addr);
+    }
+
+    // -------------------------------------------------------------------------
+    // Strings and addresses
+    // -------------------------------------------------------------------------
+
+    fun string_and_address_examples() {
+        let byte_str = b"hello world\n";
+        let hex_str = x"DEADBEEF";
+        let addr1 = @0x1;
+        let addr2 = @aptos_framework;
+        let addr3 = @0xCAFE_BABE;
+    }
+
+    // -------------------------------------------------------------------------
+    // Number literals with type suffixes and underscores
+    // -------------------------------------------------------------------------
+
+    fun number_examples() {
+        let a: u8 = 255u8;
+        let b: u16 = 1_000u16;
+        let c: u32 = 0xFFu32;
+        let d: u64 = 1_000_000u64;
+        let e: u128 = 0u128;
+        let f: u256 = 0x0u256;
+
+        // Signed integers (Move 2.3+)
+        let g: i8 = -1i8;
+        let h: i64 = 42i64;
+        let i: i128 = -1_000i128;
+        let j: i256 = 0i256;
+    }
+
+    // -------------------------------------------------------------------------
+    // vector literal constructor
+    // -------------------------------------------------------------------------
+
+    fun vector_examples() {
+        let empty = vector[];
+        let nums = vector[1, 2, 3];
+        let typed = vector<u8>[0, 1, 2];
+        let len = vector::length(&nums);
+    }
+
+    // -------------------------------------------------------------------------
+    // Lambda expressions and function values (Move 2.0+ / 2.2+)
+    // -------------------------------------------------------------------------
+
+    struct Processor {
+        f: |u64| u64 has copy + drop,
+    }
+
+    inline fun apply<T>(v: vector<T>, f: |T| T): vector<T> {
+        // inline function with lambda parameter
+        let result = vector[];
+        for (i in 0..vector::length(&v)) {
+            let elem = *vector::borrow(&v, i);
+            vector::push_back(&mut result, f(elem));
+        };
+        result
+    }
+
+    fun lambda_examples() {
+        let doubled = apply(vector[1, 2, 3], |x| x * 2);
+
+        // Lambda with type annotation
+        let vec = vector[0u8, 1, 2];
+        vec.map_ref(|val: &u8| {
+            *val + 1
+        });
+
+        // Empty closure types
+        let thunk: || u64 = || 42;
+        let _ = thunk();
+    }
+
+    // -------------------------------------------------------------------------
+    // Attributes / annotations
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fun test_basic() {
+        assert!(1 + 1 == 2);
+    }
+
+    #[test_only]
+    fun test_helper(): u64 { 0 }
+
+    #[expected_failure(abort_code = E_NOT_AUTHORIZED)]
+    #[test]
+    fun test_failure() {
+        abort E_NOT_AUTHORIZED
+    }
+
+    #[view]
+    public fun get_value(): u64 { 0 }
+
+    #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
+    struct MyResource has key {
+        data: u64,
+    }
+
+    // -------------------------------------------------------------------------
+    // Spec blocks (Move Specification Language)
+    // -------------------------------------------------------------------------
+
+    spec get_admin {
+        pragma aborts_if_is_partial = true;
+        aborts_if !exists<Config>(addr);
+        ensures result == global<Config>(addr).admin;
+    }
+
+    spec module {
+        invariant forall addr: address where exists<Config>(addr):
+            global<Config>(addr).admin != @0x0;
+    }
+
+    spec schema AdminCheck {
+        addr: address;
+        requires exists<Config>(addr);
+        include SomeOtherSchema;
+    }
+
+    /*
+    Block comment.
+    /* Nested block comment. */
+    Still in the outer block comment.
+    */
+}
