@@ -23,6 +23,8 @@ npm install highlightjs-move highlight.js
 
 ## Usage
 
+Both ESM (`import`) and CommonJS (`require`) are supported out of the box.
+
 ### Node.js (ESM)
 
 ```js
@@ -39,6 +41,15 @@ module 0x1::example {
 
 const highlighted = hljs.highlight(code, { language: 'move' });
 console.log(highlighted.value);
+```
+
+### Node.js (CommonJS)
+
+```js
+const hljs = require('highlight.js/lib/core');
+const move = require('highlightjs-move');
+
+hljs.registerLanguage('move', move);
 ```
 
 ### Browser
@@ -59,6 +70,28 @@ module 0x1::coin {
     }
 }
 </code></pre>
+```
+
+### Highlight.js v10
+
+A v10-compatible build is available for projects that haven't upgraded to v11 yet.
+It uses the v10 grammar API (`className` instead of `scope`, etc.) but supports
+all the same Move language features.
+
+```js
+// ESM
+import hljs from 'highlight.js/lib/core';
+import move from 'highlightjs-move/v10';
+
+hljs.registerLanguage('move', move);
+```
+
+```js
+// CommonJS
+const hljs = require('highlight.js/lib/core');
+const move = require('highlightjs-move/v10');
+
+hljs.registerLanguage('move', move);
 ```
 
 ## Language Aliases

@@ -9,16 +9,16 @@ Category: smart-contracts
 */
 
 /**
- * Highlight.js language definition for Aptos Move (v11+ API).
+ * Highlight.js v10 compatible language definition for Aptos Move.
+ *
+ * This file uses the v10 grammar API (className instead of scope, begin instead
+ * of match, no beginScope/endScope, no hljs.regex). For highlight.js v11+,
+ * use the main entry point instead.
  *
  * Built from the Aptos Move Book (https://aptos.dev/build/smart-contracts/book)
  * and the Move Specification Language reference.
- *
- * @type {import('highlight.js').LanguageFn}
  */
 module.exports = function move(hljs) {
-  const regex = hljs.regex;
-
   // ---------------------------------------------------------------------------
   // Keywords
   // ---------------------------------------------------------------------------
@@ -145,7 +145,7 @@ module.exports = function move(hljs) {
   ];
 
   // ---------------------------------------------------------------------------
-  // Modes
+  // Modes (v10 compatible: uses className instead of scope, begin instead of match)
   // ---------------------------------------------------------------------------
 
   // Nested block comments: Move supports nesting, e.g.
@@ -159,8 +159,8 @@ module.exports = function move(hljs) {
   const DOC_COMMENT = hljs.COMMENT(/\/\/\//, /$/, {
     contains: [
       {
-        scope: 'doctag',
-        match: /@\w+/,
+        className: 'doctag',
+        begin: /@\w+/,
       },
     ],
   });
@@ -175,11 +175,11 @@ module.exports = function move(hljs) {
    * These are Move's UTF-8 byte string values.
    */
   const BYTE_STRING = {
-    scope: 'string',
+    className: 'string',
     begin: /b"/,
     end: /"/,
     contains: [
-      { match: /\\./ }, // escape sequences like \n, \\, \"
+      { begin: /\\./ }, // escape sequences like \n, \\, \"
     ],
     relevance: 10,
   };
@@ -189,7 +189,7 @@ module.exports = function move(hljs) {
    * These encode raw byte arrays from hex digits.
    */
   const HEX_STRING = {
-    scope: 'string',
+    className: 'string',
     begin: /x"/,
     end: /"/,
     relevance: 10,
@@ -203,13 +203,13 @@ module.exports = function move(hljs) {
    * - Type suffixes: u8, u16, u32, u64, u128, u256, i8, i16, i32, i64, i128, i256
    */
   const NUMBER = {
-    scope: 'number',
+    className: 'number',
     relevance: 0,
     variants: [
       // Hex literals with optional type suffix
-      { match: /\b0x[0-9a-fA-F][0-9a-fA-F_]*(?:[ui](?:8|16|32|64|128|256))?\b/ },
+      { begin: /\b0x[0-9a-fA-F][0-9a-fA-F_]*(?:[ui](?:8|16|32|64|128|256))?\b/ },
       // Decimal literals with optional type suffix
-      { match: /\b[0-9][0-9_]*(?:[ui](?:8|16|32|64|128|256))?\b/ },
+      { begin: /\b[0-9][0-9_]*(?:[ui](?:8|16|32|64|128|256))?\b/ },
     ],
   };
 
@@ -220,8 +220,8 @@ module.exports = function move(hljs) {
    * - Named: @aptos_framework, @my_addr
    */
   const ADDRESS_LITERAL = {
-    scope: 'symbol',
-    match: /@(?:0x[0-9a-fA-F][0-9a-fA-F_]*|[a-zA-Z_]\w*)/,
+    className: 'symbol',
+    begin: /@(?:0x[0-9a-fA-F][0-9a-fA-F_]*|[a-zA-Z_]\w*)/,
     relevance: 10,
   };
 
@@ -232,25 +232,25 @@ module.exports = function move(hljs) {
    * #[expected_failure(...)], #[persistent], etc.
    */
   const ATTRIBUTE = {
-    scope: 'meta',
+    className: 'meta',
     begin: /#\[/,
     end: /\]/,
     contains: [
       {
         // Attribute name
-        scope: 'keyword',
-        match: /[a-zA-Z_]\w*/,
+        className: 'keyword',
+        begin: /[a-zA-Z_]\w*/,
       },
       {
         // Parenthesized arguments
         begin: /\(/,
         end: /\)/,
         contains: [
-          { scope: 'string', begin: /"/, end: /"/ },
-          { scope: 'number', match: /\b\d+\b/ },
+          { className: 'string', begin: /"/, end: /"/ },
+          { className: 'number', begin: /\b\d+\b/ },
           // Allow nested identifiers and :: paths inside attribute args
-          { match: /[a-zA-Z_]\w*(?:::[a-zA-Z_]\w*)*/ },
-          { match: /=/ },
+          { begin: /[a-zA-Z_]\w*(?:::[a-zA-Z_]\w*)*/ },
+          { begin: /=/ },
         ],
       },
     ],
@@ -260,66 +260,76 @@ module.exports = function move(hljs) {
   /**
    * Module declaration.
    * `module address::name { ... }` or `module 0x1::name { ... }`
-   * Highlights the module path and name.
+   * In v10, we use beginKeywords to match `module` and a sub-mode for the path.
    */
   const MODULE_DECLARATION = {
-    begin: [
-      /\b(?:module)\b/,
-      /\s+/,
-      // Module path: addr::name (possibly multiple :: segments)
-      /(?:0x[0-9a-fA-F_]+|[a-zA-Z_]\w*)(?:::[a-zA-Z_]\w*)*/,
+    beginKeywords: 'module',
+    end: /[{;]/,
+    returnEnd: true,
+    contains: [
+      {
+        className: 'title',
+        begin: /(?:0x[0-9a-fA-F_]+|[a-zA-Z_]\w*)(?:::[a-zA-Z_]\w*)*/,
+        relevance: 0,
+      },
     ],
-    beginScope: {
-      1: 'keyword',
-      3: 'title.class',
-    },
     relevance: 10,
   };
 
   /**
    * Function declarations.
-   * Matches patterns like:
-   *   fun name(...)
-   *   public fun name(...)
-   *   public entry fun name(...)
-   *   native public fun name(...)
-   *   inline fun name(...)
-   * Highlights the function name as title.function.
+   * Matches `fun name` and highlights the function name.
+   * In v10, we use beginKeywords for `fun` and a sub-mode for the name.
    */
   const FUNCTION_DECLARATION = {
-    begin: [/\bfun\b/, /\s+/, /[a-zA-Z_]\w*/],
-    beginScope: {
-      1: 'keyword',
-      3: 'title.function',
-    },
+    beginKeywords: 'fun',
+    end: /[({;]/,
+    returnEnd: true,
+    contains: [
+      {
+        className: 'title',
+        begin: /[a-zA-Z_]\w*/,
+        relevance: 0,
+      },
+    ],
     relevance: 10,
   };
 
   /**
    * Struct declarations.
    * `struct Name` or `public struct Name`
-   * Highlights the struct name as title.class.
+   * Highlights the struct name as title.
    */
   const STRUCT_DECLARATION = {
-    begin: [/\bstruct\b/, /\s+/, /[A-Z]\w*/],
-    beginScope: {
-      1: 'keyword',
-      3: 'title.class',
-    },
+    beginKeywords: 'struct',
+    end: /[{(;]|\bhas\b/,
+    returnEnd: true,
+    contains: [
+      {
+        className: 'title',
+        begin: /[A-Z]\w*/,
+        relevance: 0,
+      },
+    ],
     relevance: 10,
   };
 
   /**
    * Enum declarations (Move 2.0+).
    * `enum Name` with optional abilities and type parameters.
-   * Highlights the enum name as title.class.
+   * Highlights the enum name as title.
    */
   const ENUM_DECLARATION = {
-    begin: [/\benum\b/, /\s+/, /[A-Z]\w*/],
-    beginScope: {
-      1: 'keyword',
-      3: 'title.class',
-    },
+    beginKeywords: 'enum',
+    end: /[{]|\bhas\b/,
+    returnEnd: true,
+    contains: [
+      {
+        className: 'title',
+        begin: /[A-Z]\w*/,
+        relevance: 0,
+      },
+    ],
     relevance: 10,
   };
 
@@ -330,16 +340,16 @@ module.exports = function move(hljs) {
    */
   const ABILITIES = {
     begin: /\bhas\b/,
-    beginScope: 'keyword',
     end: /[{;,)]/,
     returnEnd: true,
+    keywords: 'has',
     contains: [
       {
-        scope: 'built_in',
-        match: /\b(?:copy|drop|key|store)\b/,
+        className: 'built_in',
+        begin: /\b(?:copy|drop|key|store)\b/,
       },
       // Allow + separator for function type abilities: `has copy + drop`
-      { match: /[+,]/ },
+      { begin: /[+,]/ },
     ],
     relevance: 5,
   };
@@ -348,11 +358,11 @@ module.exports = function move(hljs) {
    * Module paths with :: separator.
    * Matches qualified paths like `0x1::module_name::function_name` or
    * `aptos_framework::coin::CoinStore`.
-   * Highlights the path segments as title.class.
+   * Highlights the path segments as title (maps to hljs-title).
    */
   const MODULE_PATH = {
-    scope: 'title.class',
-    match: /\b(?:0x[0-9a-fA-F_]+|[a-zA-Z_]\w*)(?:::[a-zA-Z_]\w*)+/,
+    className: 'title',
+    begin: /\b(?:0x[0-9a-fA-F_]+|[a-zA-Z_]\w*)(?:::[a-zA-Z_]\w*)+/,
     relevance: 0,
   };
 
@@ -360,16 +370,13 @@ module.exports = function move(hljs) {
    * Function invocations.
    * Matches `identifier(` patterns but excludes keywords that look like
    * function calls (if, while, match, etc.).
+   * In v10, we build the regex manually without hljs.regex.
    */
   const FUNCTION_INVOKE = {
-    scope: 'title.function.invoke',
+    className: 'title function_',
     relevance: 0,
-    begin: regex.concat(
-      /\b/,
-      /(?!let\b|for\b|while\b|if\b|else\b|match\b|loop\b|return\b|abort\b|break\b|continue\b|use\b|module\b|struct\b|enum\b|fun\b|spec\b|const\b)/,
-      hljs.IDENT_RE,
-      regex.lookahead(/\s*(?:<[^>]*>)?\s*\(/),
-    ),
+    begin:
+      /\b(?!let\b|for\b|while\b|if\b|else\b|match\b|loop\b|return\b|abort\b|break\b|continue\b|use\b|module\b|struct\b|enum\b|fun\b|spec\b|const\b)[a-zA-Z_]\w*(?=\s*(?:<[^>]*>)?\s*\()/,
   };
 
   /**
@@ -378,8 +385,8 @@ module.exports = function move(hljs) {
    * (e.g., `fun is_eq(self: &Ordering): bool`) and in expressions (`self.field`).
    */
   const SELF_VARIABLE = {
-    scope: 'variable.language',
-    match: /\bself\b/,
+    className: 'variable language_',
+    begin: /\bself\b/,
     relevance: 0,
   };
 
@@ -389,8 +396,8 @@ module.exports = function move(hljs) {
    * Highlights `vector` as a built-in keyword.
    */
   const VECTOR_LITERAL = {
-    match: /\bvector\s*(?:<[^>]*>)?\s*\[/,
-    scope: 'built_in',
+    begin: /\bvector\s*(?:<[^>]*>)?\s*\[/,
+    className: 'built_in',
     returnEnd: true,
     relevance: 5,
   };
@@ -399,21 +406,20 @@ module.exports = function move(hljs) {
    * Lambda / closure parameters within pipe delimiters.
    * Matches `|param1, param2|` and `||` (empty closures) in lambda expressions
    * and function type annotations.
-   * Highlights the pipes as punctuation and parameters as params.
    */
   const LAMBDA_PARAMS = {
     begin: /\|/,
     end: /\|/,
-    scope: 'params',
+    className: 'params',
     relevance: 0,
     contains: [
       {
-        scope: 'type',
-        match:
+        className: 'type',
+        begin:
           /\b(?:u8|u16|u32|u64|u128|u256|i8|i16|i32|i64|i128|i256|bool|address|signer|vector)\b/,
       },
-      { match: /&\s*mut\b/, scope: 'keyword' },
-      { match: /&/, scope: 'keyword' },
+      { begin: /&\s*mut\b/, className: 'keyword' },
+      { begin: /&/, className: 'keyword' },
       NUMBER,
     ],
   };
@@ -425,13 +431,12 @@ module.exports = function move(hljs) {
   return {
     name: 'Move',
     aliases: ['move', 'aptos-move', 'move-on-aptos', 'move-lang'],
-    unicodeRegex: true,
     keywords: {
       $pattern: `${hljs.IDENT_RE}!?`,
-      keyword: KEYWORDS,
-      literal: LITERALS,
-      type: TYPES,
-      built_in: BUILTINS,
+      keyword: KEYWORDS.join(' '),
+      literal: LITERALS.join(' '),
+      type: TYPES.join(' '),
+      built_in: BUILTINS.join(' '),
     },
     contains: [
       // Comments (doc comments must come before line comments to match first)
