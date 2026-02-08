@@ -25,6 +25,6 @@
     }
   },
   "files": {
-    "includes": ["src/**/*.js"]
+    "includes": ["src/**/*.js", "src/**/*.mjs"]
   }
 }
