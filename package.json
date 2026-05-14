@@ -50,9 +50,11 @@
     "format:check": "biome format",
     "check": "biome check",
     "check:fix": "biome check --fix",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test \"test/**/*.test.js\""
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.14"
+    "@biomejs/biome": "2.3.14",
+    "highlight.js": "^11.10.0",
+    "highlight.js-v10": "npm:highlight.js@^10.7.3"
   }
 }
