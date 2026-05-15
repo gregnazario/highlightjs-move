@@ -1,11 +1,30 @@
 # highlightjs-move
 
-[Highlight.js](https://highlightjs.org/) grammar definition for the
+[![npm version](https://img.shields.io/npm/v/highlightjs-move?logo=npm&label=npm)](https://www.npmjs.com/package/highlightjs-move)
+[![npm downloads](https://img.shields.io/npm/dm/highlightjs-move)](https://www.npmjs.com/package/highlightjs-move)
+[![CI](https://github.com/gregnazario/highlightjs-move/actions/workflows/ci.yml/badge.svg)](https://github.com/gregnazario/highlightjs-move/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+[Highlight.js](https://highlightjs.org/) grammar for the
 [Move](https://aptos.dev/build/smart-contracts/book) programming language on
 [Aptos](https://aptos.dev).
 
 Supports Move 2.x features including enums, pattern matching, lambdas, function
 values, signed integers, and the Move Specification Language.
+
+## Quick Start
+
+```bash
+npm install highlightjs-move highlight.js
+```
+
+```js
+import hljs from 'highlight.js/lib/core';
+import move from 'highlightjs-move';
+
+hljs.registerLanguage('move', move);
+console.log(hljs.highlight('public fun hello(): u64 { 42 }', { language: 'move' }).value);
+```
 
 ## Installation
 
@@ -165,9 +184,11 @@ cd highlightjs-move
 npm install
 ```
 
-Test files are located in `test/`:
-- `test/detect/move/default.txt` -- comprehensive detection test
-- `test/markup/move/short.move` -- markup/rendering test
+| Command | Description |
+|---|---|
+| `npm test` | Run tests |
+| `npm run check` | Lint & format check |
+| `npm run check:fix` | Auto-fix lint & format issues |
 
 ## References
 
