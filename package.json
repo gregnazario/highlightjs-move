@@ -1,6 +1,6 @@
 {
   "name": "highlightjs-move",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Highlight.js grammar for the Move programming language (Aptos blockchain)",
   "homepage": "https://github.com/gregnazario/highlightjs-move#readme",
   "bugs": {
@@ -50,7 +50,8 @@
     "format:check": "biome format",
     "check": "biome check",
     "check:fix": "biome check --fix",
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test \"test/**/*.test.js\"",
+    "prepare": "cp scripts/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.14",

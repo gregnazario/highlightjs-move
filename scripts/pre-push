@@ -1,0 +1,15 @@
+#!/bin/sh
+REMOTE="$1"
+
+while read LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
+  TAG=$(echo "$LOCAL_REF" | sed 's|refs/tags/||')
+  if echo "$TAG" | grep -q '^v'; then
+    PACKAGE_VERSION="v$(jq -r .version package.json)"
+    if [ "$PACKAGE_VERSION" != "$TAG" ]; then
+      echo "error: tag '$TAG' does not match package.json version '$PACKAGE_VERSION'"
+      echo "       Update package.json to version '${TAG#v}' or use the correct tag."
+      exit 1
+    fi
+    echo "OK: tag '$TAG' matches package.json version '$PACKAGE_VERSION'"
+  fi
+done
